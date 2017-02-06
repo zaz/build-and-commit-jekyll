@@ -1,0 +1,11 @@
+echo -n "Add commit to compiled version? (y/N) "
+read answer < /dev/tty
+if [ "$answer" != "y" ]; then exit; fi
+message=$( git log -1 --pretty=%B )
+git stash --all
+bundle exec jekyll build
+cd _site
+git add --all
+git commit -m "$message"
+cd ..
+git stash pop
