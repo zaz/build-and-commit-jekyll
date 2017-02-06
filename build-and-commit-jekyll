@@ -20,6 +20,7 @@ echo -n "Delete _site/, compile, and commit? (y/N) "
 read answer < /dev/tty
 if [ "$answer" != "y" ]; then exit; fi
 
+base=$( pwd )
 message=$( git log -1 --pretty=%B )
 
 mv _site/.git _site-git~37uh6 2>/dev/null || :
@@ -28,6 +29,7 @@ mkdir -p _site
 mv _site-git~37uh6 _site/.git 2>/dev/null || :
 
 git stash --all
+trap 'cd $base && git stash pop' INT TERM EXIT
 
 run_summary "Building" bundle exec jekyll build
 
