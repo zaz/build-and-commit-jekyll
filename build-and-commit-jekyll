@@ -1,11 +1,40 @@
-echo -n "Add commit to compiled version? (y/N) "
+# Exit on error (suffix ` || :` to prevent this)
+set -e
+
+echo -n "" >&2
+
+run_summary()
+{
+	echo -n "$1... "
+	shift
+	# Print errors in red bold
+	echo -n "\033[01;31m" >&2
+	# Print "Success" or "Failure" in green or red bold
+	"$@" >/dev/null \
+		&& echo "\033[01;32mSuccess\033[0m" \
+		|| (c="$?"; echo "\033[01;31mFailure\033[0m"; exit "$c")
+	echo -n "\033[0m" >&2
+}
+
+echo -n "Delete _site/, compile, and commit? (y/N) "
 read answer < /dev/tty
 if [ "$answer" != "y" ]; then exit; fi
+
 message=$( git log -1 --pretty=%B )
+
+mv _site/.git _site-git~37uh6 2>/dev/null || :
+run_summary "Removing _site" rm -rf _site
+mkdir -p _site
+mv _site-git~37uh6 _site/.git 2>/dev/null || :
+
 git stash --all
-bundle exec jekyll build
+
+run_summary "Building" bundle exec jekyll build
+
 cd _site
-git add --all
-git commit -m "$message"
+	git init >/dev/null
+	git add --all
+	run_summary "Committing" git commit -m "$message"
 cd ..
+
 git stash pop
